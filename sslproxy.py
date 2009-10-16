@@ -7,7 +7,7 @@ import errno
 certfile = "testcert2-full.cert"
 keyfile = "privkey2.pem"
 cafile = "cafile.pem"
-dest_host = "citicard.com"
+dest_host = "mail.google.com"
 dest_port = 443
 listen_port = 12345
 recvbuf_max = 32768
