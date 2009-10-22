@@ -13,23 +13,6 @@ dest_port = 443
 listen_port = 12345
 recvbuf_max = 32768
 
-def handler(func):
-    """ pyevent apparently doesn't do a good job of exception
-    handling; specifically if an exception gets thrown and
-    propagates back through the dispatch loop, you don't get a
-    useful backtrace. So, here's a function decorator to help
-    that
-
-    Probably, it would be better to just fix pyevent"""
-
-    def wrapped_func(*args, **kwargs):
-        try:
-            func(*args, **kwargs)
-        except Exception, e:
-            traceback.print_exc()
-            raise
-    return wrapped_func
-
 class Buffer:
     """ Simple class to act as a FIFO-ish data buffer"""
 
@@ -91,7 +74,6 @@ class ProxyHalf:
         if self._write_buf.len() > 0:
             self._write_hdler = event.write(self._ssl_sock, self._write_data)
 
-    @handler
     def close(self):
         """ Clear handlers and close the socket """
         self._clear_hdlers()
@@ -117,9 +99,6 @@ class ProxyHalf:
                     traceback.print_exc()
                     self.close()
                     self._counterpart.close()
-            except Exception, err:
-                traceback.print_exc()
-                raise
         return wrapped_func
 
     def _clear_hdlers(self):
@@ -164,7 +143,6 @@ class ProxyHalf:
         self._write_buf.pop(len)
         self._reschedule()
 
-    @handler
     def _reschedule(self):
         self._clear_hdlers()
         if self._write_buf.len() > 0:
@@ -216,7 +194,6 @@ class ProxyConnection:
         # until it's connected, so set an event for that...
         event.write(out_sock, self._connected, out_sock)
 
-    @handler
     def _connected(self, out_sock):
         out_ssl = ssl.wrap_socket(out_sock,
                                   ssl_version = ssl.PROTOCOL_SSLv23,
@@ -245,13 +222,11 @@ def main(argv):
     # start event loop
     event.dispatch()
 
-@handler
 def listen_read(ev, listen_sock, evtype, arg):
     # accept the incoming connection
-    accept_pair = listen_sock.accept()
+    accept_pair = liisten_sock.accept()
     connections.append(ProxyConnection(accept_pair))
 
-@handler
 def _sigint():
     event.abort()
 
